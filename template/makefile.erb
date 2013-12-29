@@ -1,0 +1,56 @@
+#--------------------configurations-----------------
+APP_PATH = <%= @app_path %>
+TEST_PATH = <%= @test_path %>
+PROD_PATH = <%= @prod_path %>
+PROJECT_NAME = <%= @name %>
+OUTPUT_PATH = <%= @output_path %>
+SOURCE_FOLDER_NAME = <%= @source_folder_name %>
+
+#--------------------flags-----------------
+DEPS_FLAG = -MMD -MP -MF"$(@:%.o=%.d)"
+CC = <%= @cc %>
+LINK = <%= @link %>
+
+#--------------------source files-----------------
+SRCS = <%= srcs %>
+TEST_SRCS = <%= test_srcs %>
+PROD_SRCS = <%= prod_srcs %>
+
+#--------------------objs-----------------
+OBJS += $(patsubst $(APP_PATH)/$(SOURCE_FOLDER_NAME)/%.cc, $(OUTPUT_PATH)/app/%.o, $(SRCS))
+TEST_OBJS += $(patsubst $(TEST_PATH)/$(SOURCE_FOLDER_NAME)/%.cc, $(OUTPUT_PATH)/test/%.o, $(TEST_SRCS))
+PROD_OBJS += $(patsubst $(PROD_PATH)/$(SOURCE_FOLDER_NAME)/%.cc, $(OUTPUT_PATH)/prod/%.o, $(PROD_SRCS))
+
+#--------------------deps-----------------
+DEPS += $(OBJS:.o=.d)
+TEST_DEPS += $(TEST_OBJS:.o=.d)
+PROD_DEPS += $(PROD_OBJS:.o=.d)
+ALL_DEPS = $(DEPS) $(TEST_DEPS) $(PROD_DEPS)
+
+#--------------------compile rules-----------------
+
+$(TEST_OBJS): $(OUTPUT_PATH)/test/%.o: $(TEST_PATH)/$(SOURCE_FOLDER_NAME)/%.cc
+	$(CC) <%= test_time_search_path_flag %> $(DEPS_FLAG) -c -o "$@" "$<"
+$(OBJS): $(OUTPUT_PATH)/app/%.o: $(APP_PATH)/$(SOURCE_FOLDER_NAME)/%.cc
+	$(CC) <%= compile_time_search_path_flag %> $(DEPS_FLAG) -c -o "$@" "$<"
+$(PROD_OBJS): $(OUTPUT_PATH)/prod/%.o: $(PROD_PATH)/$(SOURCE_FOLDER_NAME)/%.cc
+	$(CC) <%= prod_time_search_path_flag %> $(DEPS_FLAG) -c -o "$@" "$<"
+
+#--------------------ut-----------------
+$(OUTPUT_PATH)/$(PROJECT_NAME)_ut: $(OBJS) $(TEST_OBJS)
+	$(LINK) -o $(OUTPUT_PATH)/$(PROJECT_NAME)_ut <%= test_time_lib_path_flag %> ${TEST_OBJS} $(OBJS) <%= test_time_lib_flag %>
+test: $(OUTPUT_PATH)/$(PROJECT_NAME)_ut
+	$(OUTPUT_PATH)/$(PROJECT_NAME)_ut
+
+#--------------------package-----------------
+$(OUTPUT_PATH)/$(PROJECT_NAME): $(OBJS) $(PROD_OBJS)
+	$(LINK) -o $(OUTPUT_PATH)/$(PROJECT_NAME) <%= prod_time_lib_flag %> ${PROD_OBJS} $(OBJS) <%= prod_time_lib_flag %>
+run: $(OUTPUT_PATH)/$(PROJECT_NAME)
+	$(OUTPUT_PATH)/$(PROJECT_NAME)
+package: $(OUTPUT_PATH)/$(PROJECT_NAME)
+
+#--------------------misc-----------------
+clean:
+	rm $(OBJS) $(TEST_OBJS) $(PROD_OBJS) $(ALL_DEPS) $(OUTPUT_PATH)/$(PROJECT_NAME) $(OUTPUT_PATH)/$(PROJECT_NAME)_ut
+
+-include $(ALL_DEPS)
