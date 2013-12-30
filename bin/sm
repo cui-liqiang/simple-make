@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+require 'simple-make'
+
+raise "Cannot find the build file <build.sm>" if !File.exist?("build.sm")
+
+configuration = File.open("build.sm").read
+Project.new.instance_eval(configuration).generate_make_file

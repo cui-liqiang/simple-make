@@ -49,7 +49,7 @@ class Project
   end
 
   def generate_make_file(filename = "Makefile")
-    makefile = ERB.new(File.open(File.expand_path(File.dirname(__FILE__) + "/../template/makefile.erb")).read)
+    makefile = ERB.new(File.open(File.expand_path(File.dirname(__FILE__) + "/../../template/makefile.erb")).read)
     File.open(filename, "w") do |f|
       f.write makefile.result(binding)
     end
@@ -102,15 +102,3 @@ private
     includes.join(" ")
   end
 end
-
-def project(project_name)
-  project = Project.new(project_name)
-  yield project if block_given?
-  project
-end
-
-project("sample") do |project|
-  project.depend_on(
-      {include: "/Users/twer/work/simple-make-tool/includes", lib: "/Users/twer/work/simple-make-tool/libs/libgtest_main.a", type: :test}
-  )
-end.generate_make_file
