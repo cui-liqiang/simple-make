@@ -1,12 +1,11 @@
-$LOAD_PATH << File.dirname(__FILE__ + "/../lib")
 require "dependency"
 require "search_path"
 require "erb"
 require "dir_traverser"
 
 class Project
-  def initialize(name)
-    @name = name
+  def initialize(name=nil)
+    @name = name || default_name
     @app_path = "app"
     @test_path = "test"
     @prod_path = "prod"
@@ -16,6 +15,10 @@ class Project
     @includes = []
     @cc = "g++ -O0 -g3 -Wall"
     @link = "g++"
+  end
+
+  def default_name
+    File.absolute_path(".").split("/").last
   end
 
   def depend_on(*deps)
