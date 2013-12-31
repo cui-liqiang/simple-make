@@ -1,11 +1,11 @@
 class Dependency
-  attr_reader :include, :type
+  attr_reader :include, :scope
   def initialize map
     raise wrong_format_msg(map) if !(map.is_a? Hash) or map[:include].nil? or map[:lib].nil?
 
     @include = File.absolute_path(map[:include])
     @lib = File.absolute_path(map[:lib])
-    @type = map[:type] || :compile #could be compile/prod/test
+    @scope = map[:scope] || :compile
   end
 
   def lib_name

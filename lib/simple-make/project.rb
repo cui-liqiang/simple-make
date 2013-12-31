@@ -1,9 +1,11 @@
-require "dependency"
-require "search_path"
+require "simple-make/dependency"
+require "simple-make/search_path"
+require "simple-make/dir_traverser"
 require "erb"
-require "dir_traverser"
 
 class Project
+  attr_writer :name
+
   def initialize(name=nil)
     @name = name || default_name
     @app_path = "app"
@@ -82,7 +84,7 @@ private
   def lib_name_flag(*scopes)
     libs_name = []
     scopes.each do |scope|
-      @deps.select { |dep| dep.type == scope}.each{|dep| libs_name << dep.lib_name}
+      @deps.select { |dep| dep.scope == scope}.each{|dep| libs_name << dep.lib_name}
     end
     libs_name.map{|p| "-l#{p}"}.join(" ")
   end
@@ -90,7 +92,7 @@ private
   def lib_path_flag(*scopes)
     libs_path = []
     scopes.each do |scope|
-      @deps.select { |dep| dep.type == scope}.each{|dep| libs_path << dep.lib_path}
+      @deps.select { |dep| dep.scope == scope}.each{|dep| libs_path << dep.lib_path}
     end
     libs_path.map{|p| "-L#{p}"}.join(" ")
   end
@@ -98,8 +100,8 @@ private
   def search_path_flag(*scopes)
     includes = ["-I#{File.absolute_path(@app_path)}/include"]
     scopes.each do |scope|
-      ex_includes = @includes.select { |include| include.type == scope}.map(&:path)
-      ex_includes += @deps.select { |dep| dep.type == scope}.map(&:include)
+      ex_includes = @includes.select { |include| include.scope == scope}.map(&:path)
+      ex_includes += @deps.select { |dep| dep.scope == scope}.map(&:include)
       includes += ex_includes.map { |include| "-I#{include}" }
     end
     includes.join(" ")

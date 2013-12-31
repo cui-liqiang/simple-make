@@ -2,21 +2,21 @@ require "spec_helper"
 
 describe "Project" do
   before(:each) do
-    @project = project("sample")
+    @project = Project.new("sample")
   end
 
   context "when generating search path" do
     before(:each) do
       @project.depend_on(
-          {type: :compile, include: "dep/for/compile", lib: "dep/for/compile/lib"},
-          {type: :test, include: "dep/for/test", lib: "dep/for/test/lib"},
-          {type: :prod, include: "dep/for/prod", lib: "dep/for/prod/lib"}
+          {scope: :compile, include: "dep/for/compile", lib: "dep/for/compile/lib"},
+          {scope: :test, include: "dep/for/test", lib: "dep/for/test/lib"},
+          {scope: :prod, include: "dep/for/prod", lib: "dep/for/prod/lib"}
       )
 
       @project.header_search_path(
-          {type: :compile, path: "for/compile/headers"},
-          {type: :test, path: "for/test/headers"},
-          {type: :prod, path: "for/prod/headers"}
+          {scope: :compile, path: "for/compile/headers"},
+          {scope: :test, path: "for/test/headers"},
+          {scope: :prod, path: "for/prod/headers"}
       )
     end
 
@@ -54,9 +54,9 @@ describe "Project" do
   context "when generating lib related" do
     before(:each) do
       @project.depend_on(
-          {type: :compile, include: "dep/for/compile", lib: "dep/for/compile/liblib1.a"},
-          {type: :test, include: "dep/for/test", lib: "dep/for/test/liblib2.a"},
-          {type: :prod, include: "dep/for/prod", lib: "dep/for/prod/liblib3.a"}
+          {scope: :compile, include: "dep/for/compile", lib: "dep/for/compile/liblib1.a"},
+          {scope: :test, include: "dep/for/test", lib: "dep/for/test/liblib2.a"},
+          {scope: :prod, include: "dep/for/prod", lib: "dep/for/prod/liblib3.a"}
       )
     end
 
@@ -74,7 +74,7 @@ describe "Project" do
       end
 
       it "should handle libs without /" do
-        @project.depend_on({type: :compile, include: "dep/for/compile", lib: "liblib.a"})
+        @project.depend_on({scope: :compile, include: "dep/for/compile", lib: "liblib.a"})
 
         @project.prod_time_lib_path_flag.should match lib_path_include("dep/for/compile/", "dep/for/prod/")
       end
@@ -91,20 +91,20 @@ describe "Project" do
 
       it "should throw exception if lib name is not formated as 'libxxx.a'" do
         @project.depend_on(
-            {type: :compile, include: "dep/for/compile", lib: "dep/for/compile/wrongformat"},
+            {scope: :compile, include: "dep/for/compile", lib: "dep/for/compile/wrongformat"},
         )
 
         expect {@project.test_time_lib_flag}.to raise_error("lib name format is wrong, it should be [libxxx.a]")
       end
 
       it "should throw exception if lib name is not formated as 'lib.a'" do
-        @project.depend_on({type: :compile, include: "dep/for/compile", lib: "dep/for/compile/lib.a"})
+        @project.depend_on({scope: :compile, include: "dep/for/compile", lib: "dep/for/compile/lib.a"})
 
         expect {@project.test_time_lib_flag}.to raise_error("lib name format is wrong, it should be [libxxx.a], and the xxx should not be empty")
       end
 
       it "should handle libs without /" do
-        @project.depend_on({type: :compile, include: "dep/for/compile", lib: "liblib.a"})
+        @project.depend_on({scope: :compile, include: "dep/for/compile", lib: "liblib.a"})
 
         @project.prod_time_lib_flag.should == "-llib1 -llib -llib3"
       end
