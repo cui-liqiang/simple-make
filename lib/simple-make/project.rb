@@ -40,6 +40,10 @@ class Project
     all_sources_in(@prod_path)
   end
 
+  def sub_folders_in_target_folder
+    (all_output_dirs_related_to(@app_path) + all_output_dirs_related_to(@prod_path) + all_output_dirs_related_to(@test_path)).join(" \\\n")
+  end
+
   def header_search_path *paths
     raise "search path only accept array of paths, use [] to wrap your search paths if there is only one" if !(paths.is_a? Array)
     @includes += paths.map{|path| SearchPath.new(path)}
@@ -77,6 +81,12 @@ class Project
     end
   end
 private
+  def all_output_dirs_related_to(base)
+    (DirTraverser.all_folders_in_absolute_path("#{base}/#{@source_folder_name}") << "#{base}/#{@source_folder_name}").map do |origin|
+      "build/#{origin.sub("/#{@source_folder_name}", "")}"
+    end
+  end
+
   def all_sources_in(base)
     DirTraverser.all_files_in_absolute_path("#{base}/#{@source_folder_name}").join(" \\\n")
   end

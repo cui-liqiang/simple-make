@@ -1,24 +1,30 @@
 #--------------------configurations-----------------
-APP_PATH = <%= @app_path %>
-TEST_PATH = <%= @test_path %>
-PROD_PATH = <%= @prod_path %>
-PROJECT_NAME = <%= @name %>
-OUTPUT_PATH = <%= @output_path %>
-SOURCE_FOLDER_NAME = <%= @source_folder_name %>
+APP_PATH = app
+TEST_PATH = test
+PROD_PATH = prod
+PROJECT_NAME = sample-project
+OUTPUT_PATH = build
+SOURCE_FOLDER_NAME = src
 
 #--------------------flags-----------------
 DEPS_FLAG = -MMD -MP -MF"$(@:%.o=%.d)"
-CC = <%= @cc %>
-LINK = <%= @link %>
+CC = g++ -O0 -g3 -Wall
+LINK = g++
 
 #--------------------source files-----------------
-SRCS = <%= srcs %>
-TEST_SRCS = <%= test_srcs %>
-PROD_SRCS = <%= prod_srcs %>
+SRCS = app/src/domain/User.cc
+TEST_SRCS = test/src/domain/UserTest.cc
+PROD_SRCS = prod/src/Main.cc
 
 #--------------------folders-----------------
 
-FOLDERS = <%= sub_folders_in_target_folder%>
+FOLDERS = build/app/domain \
+build/app/service \
+build/app/util \
+build/app \
+build/prod \
+build/test/domain \
+build/test
 
 #--------------------objs-----------------
 OBJS += $(patsubst $(APP_PATH)/$(SOURCE_FOLDER_NAME)/%.cc, $(OUTPUT_PATH)/app/%.o, $(SRCS))
@@ -34,21 +40,21 @@ ALL_DEPS = $(DEPS) $(TEST_DEPS) $(PROD_DEPS)
 #--------------------compile rules-----------------
 
 $(TEST_OBJS): $(OUTPUT_PATH)/test/%.o: $(TEST_PATH)/$(SOURCE_FOLDER_NAME)/%.cc
-	$(CC) <%= test_time_search_path_flag %> $(DEPS_FLAG) -c -o "$@" "$<"
+	$(CC) -I/Users/twer/RubymineProjects/simple-make/sample-project/app/include -I/Users/twer/RubymineProjects/simple-make/sample-libs/includes $(DEPS_FLAG) -c -o "$@" "$<"
 $(OBJS): $(OUTPUT_PATH)/app/%.o: $(APP_PATH)/$(SOURCE_FOLDER_NAME)/%.cc
-	$(CC) <%= compile_time_search_path_flag %> $(DEPS_FLAG) -c -o "$@" "$<"
+	$(CC) -I/Users/twer/RubymineProjects/simple-make/sample-project/app/include $(DEPS_FLAG) -c -o "$@" "$<"
 $(PROD_OBJS): $(OUTPUT_PATH)/prod/%.o: $(PROD_PATH)/$(SOURCE_FOLDER_NAME)/%.cc
-	$(CC) <%= prod_time_search_path_flag %> $(DEPS_FLAG) -c -o "$@" "$<"
+	$(CC) -I/Users/twer/RubymineProjects/simple-make/sample-project/app/include $(DEPS_FLAG) -c -o "$@" "$<"
 
 #--------------------ut-----------------
 $(OUTPUT_PATH)/$(PROJECT_NAME)_ut: $(OBJS) $(TEST_OBJS)
-	$(LINK) -o $(OUTPUT_PATH)/$(PROJECT_NAME)_ut <%= test_time_lib_path_flag %> ${TEST_OBJS} $(OBJS) <%= test_time_lib_flag %>
+	$(LINK) -o $(OUTPUT_PATH)/$(PROJECT_NAME)_ut -L/Users/twer/RubymineProjects/simple-make/sample-libs/libs/ ${TEST_OBJS} $(OBJS) -lgtest_main
 test: init $(OUTPUT_PATH)/$(PROJECT_NAME)_ut
 	$(OUTPUT_PATH)/$(PROJECT_NAME)_ut
 
 #--------------------package-----------------
 $(OUTPUT_PATH)/$(PROJECT_NAME): $(OBJS) $(PROD_OBJS)
-	$(LINK) -o $(OUTPUT_PATH)/$(PROJECT_NAME) <%= prod_time_lib_path_flag %> ${PROD_OBJS} $(OBJS) <%= prod_time_lib_flag %>
+	$(LINK) -o $(OUTPUT_PATH)/$(PROJECT_NAME)  ${PROD_OBJS} $(OBJS) 
 run: init $(OUTPUT_PATH)/$(PROJECT_NAME)
 	$(OUTPUT_PATH)/$(PROJECT_NAME)
 package: $(OUTPUT_PATH)/$(PROJECT_NAME)

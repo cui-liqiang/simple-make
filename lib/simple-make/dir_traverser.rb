@@ -12,4 +12,17 @@ class DirTraverser
     end
     found
   end
+
+  def self.all_folders_in_absolute_path base, found=[]
+    Dir.foreach(base) do |each|
+      next if(each == "." || each == "..")
+
+      full_name = base + "/" +each
+      if File.directory? full_name
+        found << full_name
+        all_folders_in_absolute_path(full_name, found)
+      end
+    end
+    found
+  end
 end
