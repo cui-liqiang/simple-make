@@ -80,3 +80,5 @@ Similiar with **compile**, except it's related to **prod** folder described in *
 ## Sample Project
 **sample-project** is an example to demo how simple-make work. **sample-libs** is the gtest library. Check sample-project/build.sm to see how it is confingured.
 Run "sm" within sample-project folder, and Makefile will be generated. Currently there are only two make targets supported: "test", "run".
+
+**Notice**: the sample-libs/libs/libgtest_main.a is compiled on Mac. If your platform is not Mac, you should recompile the libgtest_main.a from source and replace this one.
