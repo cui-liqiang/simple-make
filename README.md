@@ -6,7 +6,7 @@ gem install simple-make
  - Do some configuration changes in build.sm
  - Run command "sm", then Makefile should be created
 
-## Typical Project Folder Structure
+## Recommended Project Folder Structure
 ```
 $ tree
 .
@@ -38,17 +38,19 @@ $ tree
  - **test**: Similiar with **app** folder. The source files **needed and only needed** when producing unit test executable
 
 ## Configuration
-One configuration item per line
+Add configurations in build.sm.
 ### Madatory
 **None** if you follow the folder structure described above
 ### Basic
- - **Project Name**. e.g. name="sample-name". **Default value**: name of the folder where you run the command
- - **Dependencies**. A static libaray dependency. List the following to describe this dependency:
-    - Search path of the headers for this lib
-    - Static lib file path with form "/path/to/lib/libxxx.a"
-    - Scope, which could be compile/test/prod. "compile" is the **default value** if not given. Meanings of scope are listed in the later section
- 	- Search path and lib file path can be absolute or relative to the folder where "sm" runs
- 	- Example(for one and for multiple):
+#####Project Name
+e.g. ```name="sample-name"```. **Default value**: name of the folder where "sm" runs
+#####Dependencies
+A static libaray dependency. List the following to describe this dependency:
+ - Search path of the headers for this lib
+ - Static lib file path with form: "/path/to/lib/libxxx.a"
+ - Scope, which could be compile/test/prod. "compile" is the **default value** if not given. Meanings of scope are listed in the latter section.
+Search path and lib file path can be absolute or relative to the folder where "sm" runs
+ - Examples:
 
  	```
  		depend_on({include:"includes", lib:"libs/libgtest_main.a", scope: :test})
@@ -57,8 +59,20 @@ One configuration item per line
  		depend_on({include:"includes1", lib:"libs/libmockcpp.a", scope: :test},
  				  {include:"includes2", lib:"libs/libgtestcpp.a", scope: :test})
  	```
- - **Search Path**. Similiar to **Dependencies**, but only search path needed.
 
- 	```
- 		header_search_path({path:"/search/path", scope::compile})
- 	```
+#####Search Path
+Similiar to **Dependencies**, but only search path needed.
+
+```
+header_search_path({path:"/search/path", scope::compile})
+```
+
+### Scope 
+**scope** is an attribute for both **Dependencies** and **Search Path**. Value of **scope** could be compile/test/prod
+
+ - compile. 
+If a **Dependencies** or **Search Path** is used by code within **app** folder described in **Recommended Project Folder Structure** section, use compile as the scope value.
+ - test. 
+Similiar with **compile**, except it's related to **test** folder described in **Recommended Project Folder Structure** section.
+ - prod. 
+Similiar with **compile**, except it's related to **prod** folder described in **Recommended Project Folder Structure** section.
