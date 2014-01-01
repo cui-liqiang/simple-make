@@ -67,7 +67,7 @@ Similiar to **Dependencies**, but only search path needed.
 header_search_path({path:"/search/path", scope::compile})
 ```
 
-### Scope 
+## Scope
 **scope** is an attribute for both **Dependencies** and **Search Path**. Value of **scope** could be compile/test/prod
 
  - compile. 
@@ -76,3 +76,7 @@ If a **Dependencies** or **Search Path** is used by code within **app** folder d
 Similiar with **compile**, except it's related to **test** folder described in **Recommended Project Folder Structure** section.
  - prod. 
 Similiar with **compile**, except it's related to **prod** folder described in **Recommended Project Folder Structure** section.
+
+## Sample Project
+**sample-project** is an example to demo how simple-make work. **sample-libs** is the gtest library. Check sample-project/build.sm to see how it is confingured.
+Run "sm" within sample-project folder, and Makefile will be generated. Currently there are only two make targets supported: "test", "run".
