@@ -6,7 +6,7 @@ require "erb"
 
 class Project
   include PathHelper
-  attr_writer :name, :src_suffix
+  attr_writer :name, :src_suffix, :app_path, :test_path
 
   def initialize(options = {})
     @name = default_name
@@ -45,7 +45,11 @@ class Project
   end
 
   def sub_folders_in_target_folder
-    (all_output_dirs_related_to(@app_path) + all_output_dirs_related_to(@prod_path) + all_output_dirs_related_to(@test_path)).join(" \\\n")
+    folders = []
+    {"app" => @app_path, "prod" => @prod_path, "test" => @test_path}.each_pair do |k,v|
+      folders += all_output_dirs_related_to(k, v)
+    end
+    folders.map{|raw| "build/#{raw}"}.join(" \\\n")
   end
 
   def header_search_path *paths
@@ -85,11 +89,11 @@ class Project
     end
   end
 private
-  def all_output_dirs_related_to(base)
+  def all_output_dirs_related_to(label, base)
     return [] if !File.exist?(base)
-    (DirTraverser.all_folders_in_path("#{base}/#{@source_folder_name}") << "#{base}/#{@source_folder_name}").map do |origin|
-      "build/#{origin.sub("/#{@source_folder_name}", "")}"
-    end
+    (DirTraverser.all_folders_in_path("#{base}/#{@source_folder_name}")).map do |origin|
+      label + origin.sub("#{base}/#{@source_folder_name}", "")
+    end << label
   end
 
   def all_sources_in(base)

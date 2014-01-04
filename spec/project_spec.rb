@@ -1,5 +1,6 @@
 require "spec_helper"
 require "simple-make/project"
+require "fileutils"
 
 describe "Project" do
   before(:each) do
@@ -108,6 +109,51 @@ describe "Project" do
         @project.depend_on({scope: :compile, include: "dep/for/compile", lib: "liblib.a"})
 
         @project.prod_time_lib_flag.should == "-llib1 -llib -llib3"
+      end
+    end
+  end
+
+  context "folder creation" do
+    def with_creation_and_clean_up *folder_names
+      folder_names.each {|folder_name|FileUtils.mkdir_p(folder_name)}
+      begin
+        yield
+      ensure
+        folder_names.each {|folder_name|FileUtils.rmtree folder_name.split("/").first}
+      end
+    end
+
+    it "should create build/app if app folder is present" do
+      app_folder = "this/is/a/app/folder"
+      with_creation_and_clean_up app_folder do
+        @project.app_path = app_folder
+        @project.sub_folders_in_target_folder.should == "build/app"
+      end
+    end
+
+    it "should create build/test if test folder is present" do
+      test_folder = "this/is/a/test/folder"
+      with_creation_and_clean_up test_folder+"/src" do
+        @project.test_path = test_folder
+        @project.sub_folders_in_target_folder.should == "build/test"
+      end
+    end
+
+    it "should create build/test and build/app if both app and test folder are present" do
+      test_folder = "this/is/a/test/folder"
+      app_folder = "this/is/a/app/folder"
+      with_creation_and_clean_up test_folder+"/src", app_folder+"/src" do
+        @project.test_path = test_folder
+        @project.app_path = app_folder
+        @project.sub_folders_in_target_folder.should == "build/app \\\nbuild/test"
+      end
+    end
+
+    it "should create sub folders if sub folder are present in related source folders" do
+      app_folder = "this/is/a/test/folder"
+      with_creation_and_clean_up app_folder+"/src/subfolder1" do
+        @project.app_path = app_folder
+        @project.sub_folders_in_target_folder.should == "build/app/subfolder1 \\\nbuild/app"
       end
     end
   end

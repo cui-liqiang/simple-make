@@ -2,3 +2,4 @@
 *.gem
 Makefile
 makefile
+*/build
