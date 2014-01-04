@@ -21,9 +21,9 @@ PROD_SRCS = <%= prod_srcs %>
 FOLDERS = <%= sub_folders_in_target_folder%>
 
 #--------------------objs-----------------
-OBJS += $(patsubst $(APP_PATH)/$(SOURCE_FOLDER_NAME)/%.cc, $(OUTPUT_PATH)/app/%.o, $(SRCS))
-TEST_OBJS += $(patsubst $(TEST_PATH)/$(SOURCE_FOLDER_NAME)/%.cc, $(OUTPUT_PATH)/test/%.o, $(TEST_SRCS))
-PROD_OBJS += $(patsubst $(PROD_PATH)/$(SOURCE_FOLDER_NAME)/%.cc, $(OUTPUT_PATH)/prod/%.o, $(PROD_SRCS))
+OBJS += $(patsubst $(APP_PATH)/$(SOURCE_FOLDER_NAME)/%.<%= @src_suffix %>, $(OUTPUT_PATH)/app/%.o, $(SRCS))
+TEST_OBJS += $(patsubst $(TEST_PATH)/$(SOURCE_FOLDER_NAME)/%.<%= @src_suffix %>, $(OUTPUT_PATH)/test/%.o, $(TEST_SRCS))
+PROD_OBJS += $(patsubst $(PROD_PATH)/$(SOURCE_FOLDER_NAME)/%.<%= @src_suffix %>, $(OUTPUT_PATH)/prod/%.o, $(PROD_SRCS))
 
 #--------------------deps-----------------
 DEPS += $(OBJS:.o=.d)
@@ -33,11 +33,11 @@ ALL_DEPS = $(DEPS) $(TEST_DEPS) $(PROD_DEPS)
 
 #--------------------compile rules-----------------
 
-$(TEST_OBJS): $(OUTPUT_PATH)/test/%.o: $(TEST_PATH)/$(SOURCE_FOLDER_NAME)/%.cc
+$(TEST_OBJS): $(OUTPUT_PATH)/test/%.o: $(TEST_PATH)/$(SOURCE_FOLDER_NAME)/%.<%= @src_suffix %>
 	$(CC) <%= test_time_search_path_flag %> $(DEPS_FLAG) -c -o "$@" "$<"
-$(OBJS): $(OUTPUT_PATH)/app/%.o: $(APP_PATH)/$(SOURCE_FOLDER_NAME)/%.cc
+$(OBJS): $(OUTPUT_PATH)/app/%.o: $(APP_PATH)/$(SOURCE_FOLDER_NAME)/%.<%= @src_suffix %>
 	$(CC) <%= compile_time_search_path_flag %> $(DEPS_FLAG) -c -o "$@" "$<"
-$(PROD_OBJS): $(OUTPUT_PATH)/prod/%.o: $(PROD_PATH)/$(SOURCE_FOLDER_NAME)/%.cc
+$(PROD_OBJS): $(OUTPUT_PATH)/prod/%.o: $(PROD_PATH)/$(SOURCE_FOLDER_NAME)/%.<%= @src_suffix %>
 	$(CC) <%= prod_time_search_path_flag %> $(DEPS_FLAG) -c -o "$@" "$<"
 
 #--------------------ut-----------------

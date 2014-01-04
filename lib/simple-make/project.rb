@@ -4,7 +4,7 @@ require "simple-make/dir_traverser"
 require "erb"
 
 class Project
-  attr_writer :name
+  attr_writer :name, :src_suffix
 
   def initialize(name=nil)
     @name = name || default_name
@@ -17,6 +17,7 @@ class Project
     @includes = []
     @cc = "g++ -O0 -g3 -Wall"
     @link = "g++"
+    @src_suffix = "cc"
   end
 
   def default_name
@@ -82,6 +83,7 @@ class Project
   end
 private
   def all_output_dirs_related_to(base)
+    return [] if !File.exist?(base)
     (DirTraverser.all_folders_in_absolute_path("#{base}/#{@source_folder_name}") << "#{base}/#{@source_folder_name}").map do |origin|
       "build/#{origin.sub("/#{@source_folder_name}", "")}"
     end

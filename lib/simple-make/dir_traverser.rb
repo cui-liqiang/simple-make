@@ -1,5 +1,6 @@
 class DirTraverser
   def self.all_files_in_absolute_path base, found=[]
+    return [] if !File.exist? base
     Dir.foreach(base) do |each|
       next if(each == "." || each == "..")
 
@@ -14,6 +15,7 @@ class DirTraverser
   end
 
   def self.all_folders_in_absolute_path base, found=[]
+    return [] if !File.exist? base
     Dir.foreach(base) do |each|
       next if(each == "." || each == "..")
 
