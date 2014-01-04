@@ -1,10 +1,11 @@
 #!/usr/bin/env ruby
 
 require 'simple-make'
+require 'simple-make/cli'
 
 raise "Cannot find the build file <build.sm>" if !File.exist?("build.sm")
 
 configuration = File.open("build.sm").read
-project = Project.new
+project = Cli.new.create_project ARGV
 project.instance_eval(configuration)
 project.generate_make_file

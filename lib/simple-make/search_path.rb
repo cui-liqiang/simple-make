@@ -1,9 +1,13 @@
+require "simple-make/path_helper"
+
 class SearchPath
+  include PathHelper
   attr_reader :path, :scope
-  def initialize map
+
+  def initialize map, path_mode = :absolute
     raise wrong_format_msg(map) if !(map.is_a? Hash) or map[:path].nil?
 
-    @path = File.absolute_path(map[:path])
+    @path = get_path(path_mode, map[:path])
     @scope = map[:scope] || :compile
   end
 

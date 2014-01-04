@@ -1,13 +1,15 @@
 require "simple-make/dependency"
 require "simple-make/search_path"
 require "simple-make/dir_traverser"
+require "simple-make/path_helper"
 require "erb"
 
 class Project
+  include PathHelper
   attr_writer :name, :src_suffix
 
-  def initialize(name=nil)
-    @name = name || default_name
+  def initialize(options = {})
+    @name = default_name
     @app_path = "app"
     @test_path = "test"
     @prod_path = "prod"
@@ -18,6 +20,7 @@ class Project
     @cc = "g++ -O0 -g3 -Wall"
     @link = "g++"
     @src_suffix = "cc"
+    @path_mode = options[:path_mode] || :absolute
   end
 
   def default_name
@@ -26,7 +29,7 @@ class Project
 
   def depend_on(*deps)
     raise "depend_on only accept array of dependencies, use [] to wrap your dependency if there is only one" if !(deps.is_a? Array)
-    @deps += deps.map{|depHash| Dependency.new(depHash)}
+    @deps += deps.map{|depHash| Dependency.new(depHash, @path_mode)}
   end
 
   def srcs
@@ -47,7 +50,7 @@ class Project
 
   def header_search_path *paths
     raise "search path only accept array of paths, use [] to wrap your search paths if there is only one" if !(paths.is_a? Array)
-    @includes += paths.map{|path| SearchPath.new(path)}
+    @includes += paths.map{|path| SearchPath.new(path, @path_mode)}
   end
 
   def compile_command_with_flag cc
@@ -84,13 +87,13 @@ class Project
 private
   def all_output_dirs_related_to(base)
     return [] if !File.exist?(base)
-    (DirTraverser.all_folders_in_absolute_path("#{base}/#{@source_folder_name}") << "#{base}/#{@source_folder_name}").map do |origin|
+    (DirTraverser.all_folders_in_path("#{base}/#{@source_folder_name}") << "#{base}/#{@source_folder_name}").map do |origin|
       "build/#{origin.sub("/#{@source_folder_name}", "")}"
     end
   end
 
   def all_sources_in(base)
-    DirTraverser.all_files_in_absolute_path("#{base}/#{@source_folder_name}").join(" \\\n")
+    DirTraverser.all_files_in_path("#{base}/#{@source_folder_name}").join(" \\\n")
   end
 
   def lib_name_flag(*scopes)
@@ -110,7 +113,7 @@ private
   end
 
   def search_path_flag(*scopes)
-    includes = ["-I#{File.absolute_path(@app_path)}/include"]
+    includes = ["-I#{get_path(@path_mode, @app_path)}/include"]
     scopes.each do |scope|
       ex_includes = @includes.select { |include| include.scope == scope}.map(&:path)
       ex_includes += @deps.select { |dep| dep.scope == scope}.map(&:include)

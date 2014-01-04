@@ -1,10 +1,14 @@
+require "simple-make/path_helper"
+
 class Dependency
+  include PathHelper
   attr_reader :include, :scope
-  def initialize map
+
+  def initialize map, path_mode = :absolute
     raise wrong_format_msg(map) if !(map.is_a? Hash) or map[:include].nil? or map[:lib].nil?
 
-    @include = File.absolute_path(map[:include])
-    @lib = File.absolute_path(map[:lib])
+    @include = get_path(path_mode, map[:include])
+    @lib = get_path(path_mode, map[:lib])
     @scope = map[:scope] || :compile
   end
 

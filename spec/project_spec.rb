@@ -1,8 +1,9 @@
 require "spec_helper"
+require "simple-make/project"
 
 describe "Project" do
   before(:each) do
-    @project = Project.new("sample")
+    @project = Project.new
   end
 
   context "when generating search path" do
@@ -29,7 +30,7 @@ describe "Project" do
     end
 
     it "should generate empty string if no compile time search path present" do
-      Project.new("").compile_time_search_path_flag.should match search_path_include("app/include")
+      Project.new.compile_time_search_path_flag.should match search_path_include("app/include")
     end
 
     it "should generate correct -I flag for test" do
@@ -38,7 +39,7 @@ describe "Project" do
     end
 
     it "should generate empty string if no compile and test time search path present" do
-      Project.new("").test_time_search_path_flag.should match search_path_include("app/include")
+      Project.new.test_time_search_path_flag.should match search_path_include("app/include")
     end
 
     it "should generate correct -I flag for prod" do
@@ -47,7 +48,7 @@ describe "Project" do
     end
 
     it "should generate empty string if no compile and prod time search path present" do
-      Project.new("").prod_time_search_path_flag.should match search_path_include("app/include")
+      Project.new.prod_time_search_path_flag.should match search_path_include("app/include")
     end
   end
 
