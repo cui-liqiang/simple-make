@@ -1,0 +1,6 @@
+language: ruby
+rvm:
+  - 1.9.3
+deploy:
+  provider: rubygems
+  api_key: 28d794453f6be2b54ebf0371ffc220cf

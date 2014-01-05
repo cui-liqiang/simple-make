@@ -40,13 +40,6 @@ describe "multi-projects" do
 
   PROJECT_ROOT = File.expand_path(File.dirname(__FILE__) + "/../../")
 
-  before(:all) do
-    Dir.chdir(PROJECT_ROOT) do
-      run_command "gem build simple-make.gemspec"
-      run_command "gem install simple-make-0.0.1.gem"
-    end
-  end
-
   before(:each) do
     @base_path = PROJECT_ROOT + "/spec/functional/multi-project"
     clean_build_dirs_and_makefile
