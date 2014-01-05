@@ -4,6 +4,7 @@ PATH
     simple-make (0.0.1)
 
 GEM
+  remote: https://rubygems.org/
   specs:
     diff-lcs (1.1.3)
     rake (10.1.0)

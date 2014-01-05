@@ -66,7 +66,7 @@ describe "multi-projects" do
       check_executable_present
     end
 
-    it "should create test executables for project2 and project3 when run testall on project1" do
+    it "should create test executables for project2 and project3 when run testall on project1", not_on_ci: true do
       Dir.chdir "#{@base_path}/project1" do
         run_command "sm"
         run_command "make testall"
@@ -98,7 +98,7 @@ describe "multi-projects" do
       check_executable_present
     end
 
-    it "should test project1/2/3 when run test on root project" do
+    it "should test project1/2/3 when run test on root project", not_on_ci: true do
       Dir.chdir @base_path do
         run_command "sm"
         run_command "make test"
