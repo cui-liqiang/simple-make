@@ -55,7 +55,9 @@ $(FOLDERS): %:
 init:$(FOLDERS)
 clean:
 	rm -rf $(OUTPUT_PATH)/*
+cleanall: clean
+	rm -rf <%= dep_projects_output_path%>
 
-.PHONY: clean init
+.PHONY: clean init cleanall
 
 -include $(ALL_DEPS)

@@ -2,20 +2,25 @@ require "simple-make/dependency"
 require "simple-make/search_path"
 require "simple-make/dir_traverser"
 require "simple-make/path_helper"
+require "simple-make/project_factory"
 require "erb"
 
 class Project
   include PathHelper
+  attr_reader :output_path
   attr_writer :name, :src_suffix, :app_path, :test_path, :package_type
+  attr_accessor :path_mode
 
   def initialize(options = {})
-    @name = default_name
+    @workspace = options[:workspace] || File.absolute_path(".")
+    @name = @workspace.split("/").last
     @app_path = "app"
     @test_path = "test"
     @prod_path = "prod"
     @output_path = "build"
     @source_folder_name = "src"
     @deps = []
+    @dep_projects = []
     @includes = []
     @cc = "g++ -O0 -g3 -Wall"
     @link = "g++"
@@ -24,13 +29,13 @@ class Project
     @package_type = :executable
   end
 
-  def default_name
-    File.absolute_path(".").split("/").last
-  end
-
   def depend_on(*deps)
     raise "depend_on only accept array of dependencies, use [] to wrap your dependency if there is only one" if !(deps.is_a? Array)
     @deps += deps.map{|depHash| Dependency.new(depHash, @path_mode)}
+  end
+
+  def depend_on_project(*projects)
+    @dep_projects += projects.map{|params| ProjectFactory.create_from_relative_path(params)}
   end
 
   def srcs
@@ -67,10 +72,39 @@ class Project
   end
 
   def generate_make_file(filename = "Makefile")
+    puts "generating makefile for project #{@name} and its deps"
+    generate_makefile_for_dep_project
+    generate_make_file_for_current_project(filename)
+  end
+
+  def generate_make_file_for_current_project(filename)
+    puts "generating makefile for project #{@name}"
     makefile = ERB.new(File.open(template_file("makefile.erb")).read)
-    File.open(filename, "w") do |f|
+    File.open("#{@workspace}/#{filename}", "w") do |f|
       f.write makefile.result(binding)
     end
+  end
+
+  def pack_dep_projects
+    @dep_projects.map(&:pack_self_command).join("\n\t")
+  end
+
+  def package_file
+    puts "in package_file for project #{@name}"
+    puts "@package_type is:"
+    p @package_type
+    return "#{@output_path}/lib#{@name}.a" if(@package_type == :archive)
+    return "#{@output_path}/#{@name}" if(@package_type == :executable)
+  end
+
+  def dep_projects_outputs
+    @dep_projects.map(&:package_file).join(" ")
+  end
+
+  def generate_makefile_for_dep_project
+    puts "generating makefile for dep projects"
+    puts "projects: #{@dep_projects}"
+    @dep_projects.each(&:generate_make_file)
   end
 
   def package_part
@@ -95,20 +129,34 @@ class Project
     end
   end
 
+  def dep_projects_output_path
+    @dep_projects.map(&:output_path).join(" ")
+  end
+
 private
   def template_file(template)
     File.expand_path(File.dirname(__FILE__) + "/../../template/#{template}")
   end
 
   def all_output_dirs_related_to(label, base)
-    return [] if !File.exist?(base)
-    (DirTraverser.all_folders_in_path("#{base}/#{@source_folder_name}")).map do |origin|
-      label + origin.sub("#{base}/#{@source_folder_name}", "")
-    end << label
+    within_workspace do
+      File.exist?(base) ?
+      (DirTraverser.all_folders_in_path("#{base}/#{@source_folder_name}")).map do |origin|
+        label + origin.sub("#{base}/#{@source_folder_name}", "")
+      end << label : []
+    end
   end
 
   def all_sources_in(base)
-    DirTraverser.all_files_in_path("#{base}/#{@source_folder_name}").join(" \\\n")
+    within_workspace {DirTraverser.all_files_in_path("#{base}/#{@source_folder_name}").join(" \\\n")}
+  end
+
+  def within_workspace
+    ret = ""
+    Dir.chdir(@workspace) do
+      ret = yield
+    end
+    ret
   end
 
   def lib_name_flag(*scopes)
@@ -128,11 +176,13 @@ private
   end
 
   def search_path_flag(*scopes)
-    includes = ["-I#{get_path(@path_mode, @app_path)}/include"]
+    includes = [within_workspace{"-I#{get_path(@path_mode, @app_path)}/include"}]
+
     scopes.each do |scope|
       ex_includes = @includes.select { |include| include.scope == scope}.map(&:path)
       ex_includes += @deps.select { |dep| dep.scope == scope}.map(&:include)
       includes += ex_includes.map { |include| "-I#{include}" }
+      includes += @dep_projects.select{|dep_project| dep_project.scope == scope}.map(&:export_search_path_flag)
     end
     includes.join(" ")
   end

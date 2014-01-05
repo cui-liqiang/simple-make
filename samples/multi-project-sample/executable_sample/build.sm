@@ -1,0 +1,2 @@
+depend_on({include:"../../sample-libs/includes", lib:"../../sample-libs/libs/libgtest_main.a", scope: :test})
+depend_on_project({relative_path: "../archive-sample", scope: :prod})
