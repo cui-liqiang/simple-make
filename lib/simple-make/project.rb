@@ -4,13 +4,14 @@ require "simple-make/dir_traverser"
 require "simple-make/path_helper"
 require "simple-make/project_factory"
 require "simple-make/std_logger"
+require "simple-make/template"
+require "simple-make/package_type/package_factory"
 require "erb"
 
 class Project
   include PathHelper
-  attr_reader :output_path
-  attr_writer :name, :src_suffix, :app_path, :test_path, :package_type
-  attr_accessor :path_mode
+  attr_accessor :name, :src_suffix, :app_path, :test_path, :prod_path, :output_path, :compile_command_with_flag, :link, :source_folder_name
+  attr_reader :dep_projects
 
   def initialize(options = {})
     @workspace = options[:workspace] || File.absolute_path(".")
@@ -23,15 +24,19 @@ class Project
     @deps = []
     @dep_projects = []
     @includes = []
-    @cc = "g++ -O0 -g3 -Wall"
-    @link = "g++"
+    @compile_command_with_flag = "g++ -O0 -g3 -Wall"
+    @link_command_with_flag = "g++"
     @src_suffix = "cc"
     @path_mode = options[:path_mode] || :absolute
-    @package_type = :executable
+    self.package_type = :executable
+    @makefile_name = options[:makefile] || "Makefile"
+  end
+
+  def package_type= type
+    @package = PackageFactory.create_by_type(type, self)
   end
 
   def depend_on(*deps)
-    raise "depend_on only accept array of dependencies, use [] to wrap your dependency if there is only one" if !(deps.is_a? Array)
     @deps += deps.map{|depHash| Dependency.new(depHash, @path_mode)}
   end
 
@@ -39,16 +44,9 @@ class Project
     @dep_projects += projects.map{|params| ProjectFactory.create_from_relative_path(params)}
   end
 
-  def srcs
-    all_sources_in(@app_path)
-  end
-
-  def test_srcs
-    all_sources_in(@test_path)
-  end
-
-  def prod_srcs
-    all_sources_in(@prod_path)
+  def header_search_path *paths
+    raise "search path only accept array of paths, use [] to wrap your search paths if there is only one" if !(paths.is_a? Array)
+    @includes += paths.map{|path| SearchPath.new(path, @path_mode)}
   end
 
   def sub_folders_in_target_folder
@@ -56,49 +54,25 @@ class Project
     {"app" => @app_path, "prod" => @prod_path, "test" => @test_path}.each_pair do |k,v|
       folders += all_output_dirs_related_to(k, v)
     end
-    folders.map{|raw| "build/#{raw}"}.join(" \\\n")
+    folders.map{|raw| "#{@output_path}/#{raw}"}.join(" \\\n")
   end
 
-  def header_search_path *paths
-    raise "search path only accept array of paths, use [] to wrap your search paths if there is only one" if !(paths.is_a? Array)
-    @includes += paths.map{|path| SearchPath.new(path, @path_mode)}
-  end
-
-  def compile_command_with_flag cc
-    @cc = cc
-  end
-
-  def link_command_with_flag link
-    @link = link
-  end
-
-  def generate_make_file(filename = "Makefile")
+  def generate_make_file
     $std_logger.debug "generating makefile for project #{@name} and its deps"
     generate_makefile_for_dep_project
-    generate_make_file_for_current_project(filename)
+    generate_make_file_for_current_project
   end
 
-  def generate_make_file_for_current_project(filename)
+  def generate_make_file_for_current_project
     $std_logger.debug  "generating makefile for project #{@name}"
-    makefile = ERB.new(File.open(template_file("makefile.erb")).read)
-    File.open("#{@workspace}/#{filename}", "w") do |f|
+    makefile = ERB.new(Template.template_content("makefile"))
+    File.open("#{@workspace}/#{@makefile_name}", "w") do |f|
       f.write makefile.result(binding)
     end
   end
 
-  def pack_dep_projects
-    @dep_projects.map(&:pack_self_command).join("\n\t")
-  end
-
   def package_file
-    $std_logger.debug  "in package_file for project #{@name}"
-    $std_logger.debug  "@package_type is: #{@package_type}"
-    return "#{@output_path}/lib#{@name}.a" if(@package_type == :archive)
-    return "#{@output_path}/#{@name}" if(@package_type == :executable)
-  end
-
-  def dep_projects_outputs
-    @dep_projects.map(&:package_file).join(" ")
+    @package.package_file
   end
 
   def generate_makefile_for_dep_project
@@ -108,14 +82,18 @@ class Project
   end
 
   def package_part
-    package = ERB.new(File.open(template_file("#{@package_type}_package.erb")).read)
-    package.result(binding)
+    @package.pack_deps_command
   end
 
   [:compile, :test, :prod].each do |scope|
     define_method("#{scope}_time_search_path_flag") do
       return search_path_flag(:compile) if scope == :compile
       search_path_flag(:compile, scope)
+    end
+
+    define_method("#{scope}_time_srcs") do
+      scope = :app if scope == :compile
+      all_sources_in(send("#{scope}_path"))
     end
   end
 
@@ -134,16 +112,12 @@ class Project
   end
 
 private
-  def template_file(template)
-    File.expand_path(File.dirname(__FILE__) + "/../../template/#{template}")
-  end
-
-  def all_output_dirs_related_to(label, base)
+  def all_output_dirs_related_to(scope, base)
     within_workspace do
       File.exist?(base) ?
       (DirTraverser.all_folders_in_path("#{base}/#{@source_folder_name}")).map do |origin|
-        label + origin.sub("#{base}/#{@source_folder_name}", "")
-      end << label : []
+        scope + origin.sub("#{base}/#{@source_folder_name}", "")
+      end << scope : []
     end
   end
 

@@ -8,13 +8,13 @@ SOURCE_FOLDER_NAME = <%= @source_folder_name %>
 
 #--------------------flags-----------------
 DEPS_FLAG = -MMD -MP -MF"$(@:%.o=%.d)"
-CC = <%= @cc %>
-LINK = <%= @link %>
+CC = <%= @compile_command_with_flag %>
+LINK = <%= @link_command_with_flag %>
 
 #--------------------source files-----------------
-SRCS = <%= srcs %>
-TEST_SRCS = <%= test_srcs %>
-PROD_SRCS = <%= prod_srcs %>
+SRCS = <%= compile_time_srcs %>
+TEST_SRCS = <%= test_time_srcs %>
+PROD_SRCS = <%= prod_time_srcs %>
 
 #--------------------folders-----------------
 

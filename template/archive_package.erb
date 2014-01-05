@@ -1,4 +1,4 @@
 $(OUTPUT_PATH)/lib$(PROJECT_NAME).a : $(OBJS) $(PROD_OBJS)
-	<%= pack_dep_projects %>
-	$(AR) $(ARFLAGS) $@ $^ <%= dep_projects_outputs %>
+	<%= pack_dep_project_commands %>
+	$(AR) $(ARFLAGS) $@ $^ <%= dep_projects_output_names %>
 package: init $(OUTPUT_PATH)/lib$(PROJECT_NAME).a
