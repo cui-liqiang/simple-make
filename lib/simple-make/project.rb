@@ -5,13 +5,14 @@ require "simple-make/path_helper"
 require "simple-make/project_factory"
 require "simple-make/std_logger"
 require "simple-make/template"
+require "simple-make/normal_makefile_maker"
+require "simple-make/root_makefile_maker"
 require "simple-make/package_type/package_factory"
-require "erb"
 
 class Project
   include PathHelper
   attr_accessor :name, :src_suffix, :app_path, :test_path, :prod_path, :output_path, :compile_command_with_flag, :link, :source_folder_name
-  attr_reader :dep_projects
+  attr_reader :dep_projects, :workspace, :makefile_name
 
   def initialize(options = {})
     @workspace = options[:workspace] || File.absolute_path(".")
@@ -30,6 +31,11 @@ class Project
     @path_mode = options[:path_mode] || :absolute
     self.package_type = :executable
     @makefile_name = options[:makefile] || "Makefile"
+    @makefile_maker = NormalMakefileMaker.new(self, binding)
+  end
+
+  def root_project
+    @makefile_maker = RootMakefileMaker.new(self, binding)
   end
 
   def package_type= type
@@ -37,16 +43,21 @@ class Project
   end
 
   def depend_on(*deps)
-    @deps += deps.map{|depHash| Dependency.new(depHash, @path_mode)}
+    within_workspace do
+      @deps += deps.map{|depHash| Dependency.new(depHash, @path_mode)}
+    end
   end
 
   def depend_on_project(*projects)
-    @dep_projects += projects.map{|params| ProjectFactory.create_from_relative_path(params)}
+    within_workspace do
+      @dep_projects += projects.map{|params| ProjectFactory.create_from_relative_path(params)}
+    end
   end
 
   def header_search_path *paths
-    raise "search path only accept array of paths, use [] to wrap your search paths if there is only one" if !(paths.is_a? Array)
-    @includes += paths.map{|path| SearchPath.new(path, @path_mode)}
+    within_workspace do
+      @includes += paths.map{|path| SearchPath.new(path, @path_mode)}
+    end
   end
 
   def sub_folders_in_target_folder
@@ -58,27 +69,15 @@ class Project
   end
 
   def generate_make_file
-    $std_logger.debug "generating makefile for project #{@name} and its deps"
-    generate_makefile_for_dep_project
-    generate_make_file_for_current_project
-  end
-
-  def generate_make_file_for_current_project
-    $std_logger.debug  "generating makefile for project #{@name}"
-    makefile = ERB.new(Template.template_content("makefile"))
-    File.open("#{@workspace}/#{@makefile_name}", "w") do |f|
-      f.write makefile.result(binding)
-    end
+    @makefile_maker.generate_make_file
   end
 
   def package_file
     @package.package_file
   end
 
-  def generate_makefile_for_dep_project
-    $std_logger.debug "generating makefile for dep projects"
-    $std_logger.debug "projects: #{@dep_projects}"
-    @dep_projects.each(&:generate_make_file)
+  def pack_dep_project_commands
+    @package.pack_dep_project_commands
   end
 
   def package_part

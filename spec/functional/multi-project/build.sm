@@ -1,0 +1,4 @@
+root_project
+depend_on_project({relative_path: "project1", scope: :prod},
+				  {relative_path: "project2", scope: :prod},
+                  {relative_path: "project3", scope: :prod})

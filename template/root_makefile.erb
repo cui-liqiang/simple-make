@@ -1,0 +1,8 @@
+test:
+	<%= run_test_on_deps %>
+clean:
+	rm -rf <%= dep_projects_output_path%>
+package:
+	<%= pack_dep_project_commands %>
+
+.PHONY: clean test package
