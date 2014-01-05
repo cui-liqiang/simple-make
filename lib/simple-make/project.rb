@@ -3,6 +3,7 @@ require "simple-make/search_path"
 require "simple-make/dir_traverser"
 require "simple-make/path_helper"
 require "simple-make/project_factory"
+require "simple-make/std_logger"
 require "erb"
 
 class Project
@@ -72,13 +73,13 @@ class Project
   end
 
   def generate_make_file(filename = "Makefile")
-    puts "generating makefile for project #{@name} and its deps"
+    $std_logger.debug "generating makefile for project #{@name} and its deps"
     generate_makefile_for_dep_project
     generate_make_file_for_current_project(filename)
   end
 
   def generate_make_file_for_current_project(filename)
-    puts "generating makefile for project #{@name}"
+    $std_logger.debug  "generating makefile for project #{@name}"
     makefile = ERB.new(File.open(template_file("makefile.erb")).read)
     File.open("#{@workspace}/#{filename}", "w") do |f|
       f.write makefile.result(binding)
@@ -90,9 +91,8 @@ class Project
   end
 
   def package_file
-    puts "in package_file for project #{@name}"
-    puts "@package_type is:"
-    p @package_type
+    $std_logger.debug  "in package_file for project #{@name}"
+    $std_logger.debug  "@package_type is: #{@package_type}"
     return "#{@output_path}/lib#{@name}.a" if(@package_type == :archive)
     return "#{@output_path}/#{@name}" if(@package_type == :executable)
   end
@@ -102,8 +102,8 @@ class Project
   end
 
   def generate_makefile_for_dep_project
-    puts "generating makefile for dep projects"
-    puts "projects: #{@dep_projects}"
+    $std_logger.debug "generating makefile for dep projects"
+    $std_logger.debug "projects: #{@dep_projects}"
     @dep_projects.each(&:generate_make_file)
   end
 
