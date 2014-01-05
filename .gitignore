@@ -1,5 +1,5 @@
 .idea
 *.gem
-Makefile
-makefile
-*/build
+**/Makefile
+**/makefile
+**/build

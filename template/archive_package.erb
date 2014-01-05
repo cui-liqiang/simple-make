@@ -1,0 +1,3 @@
+$(OUTPUT_PATH)/lib$(PROJECT_NAME).a : $(OBJS) $(PROD_OBJS)
+	$(AR) $(ARFLAGS) $@ $^
+package: init $(OUTPUT_PATH)/lib$(PROJECT_NAME).a

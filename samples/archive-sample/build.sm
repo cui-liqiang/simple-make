@@ -1,0 +1,3 @@
+depend_on({include:"../sample-libs/includes", lib:"../sample-libs/libs/libgtest_main.a", scope: :test})
+self.app_path="what/ever/app/path"
+self.package_type=:archive

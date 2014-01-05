@@ -6,7 +6,7 @@ require "erb"
 
 class Project
   include PathHelper
-  attr_writer :name, :src_suffix, :app_path, :test_path
+  attr_writer :name, :src_suffix, :app_path, :test_path, :package_type
 
   def initialize(options = {})
     @name = default_name
@@ -21,6 +21,7 @@ class Project
     @link = "g++"
     @src_suffix = "cc"
     @path_mode = options[:path_mode] || :absolute
+    @package_type = :executable
   end
 
   def default_name
@@ -66,10 +67,15 @@ class Project
   end
 
   def generate_make_file(filename = "Makefile")
-    makefile = ERB.new(File.open(File.expand_path(File.dirname(__FILE__) + "/../../template/makefile.erb")).read)
+    makefile = ERB.new(File.open(template_file("makefile.erb")).read)
     File.open(filename, "w") do |f|
       f.write makefile.result(binding)
     end
+  end
+
+  def package_part
+    package = ERB.new(File.open(template_file("#{@package_type}_package.erb")).read)
+    package.result(binding)
   end
 
   [:compile, :test, :prod].each do |scope|
@@ -88,7 +94,12 @@ class Project
       lib_name_flag(:compile, scope)
     end
   end
+
 private
+  def template_file(template)
+    File.expand_path(File.dirname(__FILE__) + "/../../template/#{template}")
+  end
+
   def all_output_dirs_related_to(label, base)
     return [] if !File.exist?(base)
     (DirTraverser.all_folders_in_path("#{base}/#{@source_folder_name}")).map do |origin|

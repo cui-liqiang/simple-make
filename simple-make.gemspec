@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.description = "A tool to help you create makefile base on a build.sm file."
   s.authors     = ["Cui Liqiang"]
   s.email       = 'cui.liqiang@gmail.com'
-  s.files       = (`git ls-files`.split "\n").reject{|name| %w(sample README gemspec spec).any?{|ex|name.include? ex}}
+  s.files       = (`find .`.split "\n").reject{|name| %w(sample README gemspec spec git rvmrc).any?{|ex|name.include? ex}}
   s.homepage    = ""
   s.executables << 'sm'
   s.license       = 'MIT'

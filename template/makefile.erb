@@ -47,18 +47,14 @@ test: init $(OUTPUT_PATH)/$(PROJECT_NAME)_ut
 	$(OUTPUT_PATH)/$(PROJECT_NAME)_ut
 
 #--------------------package-----------------
-$(OUTPUT_PATH)/$(PROJECT_NAME): $(OBJS) $(PROD_OBJS)
-	$(LINK) -o $(OUTPUT_PATH)/$(PROJECT_NAME) <%= prod_time_lib_path_flag %> ${PROD_OBJS} $(OBJS) <%= prod_time_lib_flag %>
-run: init $(OUTPUT_PATH)/$(PROJECT_NAME)
-	$(OUTPUT_PATH)/$(PROJECT_NAME)
-package: $(OUTPUT_PATH)/$(PROJECT_NAME)
+<%=package_part%>
 
 #--------------------misc-----------------
 $(FOLDERS): %:
 	mkdir -p "$@"
 init:$(FOLDERS)
 clean:
-	rm -rf $(OBJS) $(TEST_OBJS) $(PROD_OBJS) $(ALL_DEPS) $(OUTPUT_PATH)/$(PROJECT_NAME) $(OUTPUT_PATH)/$(PROJECT_NAME)_ut $(FOLDERS)
+	rm -rf $(OUTPUT_PATH)/*
 
 .PHONY: clean init
 
