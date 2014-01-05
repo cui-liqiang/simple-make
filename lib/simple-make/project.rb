@@ -85,6 +85,10 @@ class Project
     @package.pack_deps_command
   end
 
+  def run_test_on_deps
+    @dep_projects.map(&:test_command).join("\n\t")
+  end
+
   [:compile, :test, :prod].each do |scope|
     define_method("#{scope}_time_search_path_flag") do
       return search_path_flag(:compile) if scope == :compile

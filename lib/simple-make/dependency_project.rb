@@ -7,8 +7,12 @@ class DependencyProject
     @scope = options[:scope] || :compile
   end
 
-  def pack_self_command
-    "make -C #{@relative_path} package"
+  def package_command
+    make_command("package")
+  end
+
+  def test_command
+    make_command("test")
   end
 
   def package_file
@@ -25,5 +29,10 @@ class DependencyProject
 
   def generate_make_file
     @project.generate_make_file
+  end
+
+private
+  def make_command(string)
+    "make -C #{@relative_path} #{string}"
   end
 end

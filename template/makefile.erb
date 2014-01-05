@@ -45,6 +45,8 @@ $(OUTPUT_PATH)/$(PROJECT_NAME)_ut: $(OBJS) $(TEST_OBJS)
 	$(LINK) -o $(OUTPUT_PATH)/$(PROJECT_NAME)_ut <%= test_time_lib_path_flag %> ${TEST_OBJS} $(OBJS) <%= test_time_lib_flag %>
 test: init $(OUTPUT_PATH)/$(PROJECT_NAME)_ut
 	$(OUTPUT_PATH)/$(PROJECT_NAME)_ut
+testall: test
+	<%= run_test_on_deps %>
 
 #--------------------package-----------------
 <%=package_part%>

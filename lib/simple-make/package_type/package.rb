@@ -16,7 +16,7 @@ class Package
   end
 
   def pack_dep_project_commands
-    @project.dep_projects.map(&:pack_self_command).join("\n\t")
+    @project.dep_projects.map(&:package_command).join("\n\t")
   end
 
   def dep_projects_output_names
