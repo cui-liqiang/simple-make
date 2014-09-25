@@ -1,3 +1,4 @@
+[ ![Codeship Status for cui-liqiang/simple-make](https://www.codeship.io/projects/f1ed2cf0-26e9-0132-d20a-1e2244bd06ff/status)](https://www.codeship.io/projects/37580)
 ## Installation
 gem install simple-make
 
