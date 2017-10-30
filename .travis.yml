@@ -1,3 +1,7 @@
 language: ruby
+services:
+  - riak
+  - rabbitmq
+  - memcached
 rvm:
   - 1.9.3
